@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>bc0c54e8-0b9a-4e65-8b06-15abb0d30799.SCHEMA:TestDB.dbo</OriginalElement>
+  <nodes>
+    <node x="0.0" y="0.0">bc0c54e8-0b9a-4e65-8b06-15abb0d30799.TABLE:TestDB.dbo.user</node>
+  </nodes>
+  <notes />
+  <edges />
+  <settings layout="Hierarchic Group" zoom="1.0" x="85.0" y="88.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Key columns</Category>
+    <Category>Columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+
