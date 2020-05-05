@@ -13,6 +13,7 @@ GO
 CREATE PROCEDURE getUserByID
     @UserID int
 AS
+
 BEGIN
     SET NOCOUNT ON;
 

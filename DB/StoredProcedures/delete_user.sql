@@ -13,6 +13,7 @@ GO
 CREATE PROCEDURE deleteUser
     @UserID int
 AS
+
 BEGIN
     SET NOCOUNT ON;
 

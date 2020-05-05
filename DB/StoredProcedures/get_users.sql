@@ -12,6 +12,7 @@ GO
 
 CREATE PROCEDURE getUsers
 AS
+
 BEGIN
     SET NOCOUNT ON;
 

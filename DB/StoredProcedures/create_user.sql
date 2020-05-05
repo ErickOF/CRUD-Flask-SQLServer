@@ -17,6 +17,7 @@ CREATE PROCEDURE createNewUser
     @UserPhoneNumber int,
     @UserEmail varchar(100)
 AS
+
 BEGIN
     SET NOCOUNT ON;
 
