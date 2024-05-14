@@ -26,7 +26,7 @@ BEGIN
     SET [user].id_card = @UserIDCard,
         [user].[name] = @UserName,
         [user].last_name = @UserLastName,
-        [user].phoneNumber = @UserPhoneNumber,
+        [user].phone_number = @UserPhoneNumber,
         [user].email = @UserEmail
     WHERE [user].id_user = @UserID;
 END

@@ -21,7 +21,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO [user] (id_card, [name], last_name, phoneNumber, email)
+    INSERT INTO [user] (id_card, [name], last_name, phone_number, email)
     VALUES (@UserIDCard, @UserName, @UserLastName, @UserPhoneNumber, @UserEmail);
 END
 GO

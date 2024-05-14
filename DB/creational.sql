@@ -6,7 +6,7 @@ create table [user]
             primary key nonclustered,
     [name]      varchar(30) not null,
     last_name   varchar(30) not null,
-    phoneNumber int         not null,
+    phone_number int         not null,
     email       varchar(100)
 )
 go
