@@ -1,12 +1,13 @@
 #!.venv/bin/python
+"""CRUD API.
+"""
 import json
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 import pymssql
 
-
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 
 
@@ -20,21 +21,21 @@ with open('config/development.json', 'r', encoding='utf-8') as file:
 app: Flask = Flask(__name__)
 CORS(app)
 
-connection = pymssql.connect(**config)
+connection: pymssql.Connection = pymssql.connect(**config)
 
 
 @app.route('/users/create', methods=['POST'])
-def create_user() -> Dict[str, Any]:
+def create_user() -> Response:
     """POST method to create a new user in DB.
     Requires:
         idCard (int) - Identifier number.
         name (str) - First name.
         lastname (str) - Last name.
-        phoneNumber (str) - phone number with country code.
-        email (str) - email address.
+        phoneNumber (str) - Phone number with country code.
+        email (str) - Email address.
 
     Returns:
-        Dict[str, Any]: DB response
+        Response: DB response
     """
     # Build user info
     user_info = [
@@ -45,7 +46,7 @@ def create_user() -> Dict[str, Any]:
         request.json['email'],
     ]
 
-    cursor = connection.cursor()
+    cursor: pymssql.Cursor = connection.cursor()
 
     # Default response
     response: Dict[str, Any] = {
@@ -70,7 +71,7 @@ def create_user() -> Dict[str, Any]:
     except pymssql.DatabaseError:
         # User already exists
         response = {
-            'message': 'ID Card already exists.',
+            'message': 'ID card already exists.',
             'status': 400,
             'data': None
         }
@@ -80,22 +81,35 @@ def create_user() -> Dict[str, Any]:
     return jsonify(response)
 
 @app.route('/users/<_id>', methods=['DELETE'])
-def deleteUser(_id):
-    cursor = connection.cursor()
+def delete_user(_id: int) -> Response:
+    """DELETE method to remove an user from DB.
+
+    Args:
+        _id (int): user ID.
+
+    Returns:
+        Response: DB response.
+    """
+    cursor: pymssql.Cursor = connection.cursor()
+
+    # Call store procedure to delete the user by ID
     cursor.callproc('deleteUser', [_id])
     cursor.nextset()
 
-    response = {}
+    # Default response
+    response: Dict[str, Any] = {}
 
     try:
         connection.commit()
 
+        # User deleted successfully
         response = {
             'message': 'User was deleted.',
             'status': 400,
             'data': None
         }
     except pymssql.OperationalError:
+        # No user with this ID
         response = {
             'message': 'User not found.',
             'status': 404,
@@ -107,32 +121,50 @@ def deleteUser(_id):
     return jsonify(response)
 
 @app.route('/users/<_id>', methods=['GET'])
-def getUserById(_id):
-    cursor = connection.cursor()
+def get_user_by_id(_id: int) -> Response:
+    """GET method to retrieve user data by ID from DB.
+
+    Args:
+        _id (int): user ID.
+
+    Requires:
+        idCard (int) - New identifier number.
+        name (str) - New first name.
+        lastname (str) - New last name.
+        phoneNumber (str) - New phone number with country code.
+        email (str) - New email address.
+
+    Returns:
+        Response: DB response with the user data.
+    """
+    cursor: pymssql.Cursor = connection.cursor()
+
+    # Call stored procedure to get data from user
     cursor.callproc('getUserByID', [_id])
     cursor.nextset()
 
-    response = {}
+    # Default response
+    response: Dict[str, Any] = {}
 
     try:
-        result = cursor.fetchone()
+        result: Tuple[Any] = cursor.fetchone()
         connection.commit()
 
-        user = {
-            '_id': result[1],
-            'idCard': result[0],
-            'email': result[5],
-            'lastname': result[3],
-            'name': result[3],
-            'phoneNumber': result[4]
-        }
-
+        # Prepare response with user data
         response = {
             'message': 'Returing user.',
             'status': 400,
-            'data': user
+            'data': {
+                '_id': result[1],
+                'idCard': result[0],
+                'email': result[5],
+                'lastname': result[3],
+                'name': result[3],
+                'phoneNumber': result[4]
+            }
         }
     except pymssql.OperationalError:
+        # User id not found
         response = {
             'message': 'User not found.',
             'status': 404,
@@ -144,17 +176,28 @@ def getUserById(_id):
     return jsonify(response)
 
 @app.route('/users', methods=['GET'])
-def getUsers():
-    cursor = connection.cursor()
+def get_users() -> Response:
+    """GET method to retrieve all the user in DB.
+
+    Returns:
+        Response: DB response.
+    """
+    # Call store procedure to get all users in DB
+    cursor: pymssql.Cursor = connection.cursor()
     cursor.callproc('getUsers')
     cursor.nextset()
-    users = []
+
+    # Default response
+    response: Dict[str, Any] = {}
 
     try:
-        results = cursor.fetchall()
+        # Get all users
+        results: List[Tuple[Any]] = cursor.fetchall()
         connection.commit()
 
         users = []
+
+        # Parse user data
         for user in results:
             users.append({
                 '_id': user[1],
@@ -164,26 +207,45 @@ def getUsers():
                 'name': user[3],
                 'phoneNumber': user[4]
             })
+
+        response = {
+            'message': 'Returing all users.',
+            'status': 400,
+            'data': users
+        }
     except pymssql.OperationalError:
-        pass
+        response = {
+            'message': 'No user found.',
+            'status': 404,
+            'data': []
+        }
 
     cursor.close()
 
-    return jsonify({
-        'message': 'Returing all users.',
-        'status': 400,
-        'data': users
-    })
+    return jsonify(response)
 
 @app.route('/users/<_id>', methods=['PUT'])
-def updateUser(_id):
-    user_info = [_id, request.json['idCard'], request.json['name'],
-            request.json['lastname'], request.json['phoneNumber'],
-            request.json['email']]
+def update_user(_id: int) -> Response:
+    """PUT methods to update an user by ID.
 
-    cursor = connection.cursor()
+    Args:
+        _id (int): user ID.
 
-    response = {
+    Returns:
+        Response: DB response.
+    """
+    user_info = [
+        _id,
+        request.json['idCard'],
+        request.json['name'],
+        request.json['lastname'],
+        request.json['phoneNumber'],
+        request.json['email']
+    ]
+
+    cursor: pymssql.Cursor = connection.cursor()
+
+    response: Dict[str, Any] = {
         'message': 'Unkown error.',
         'status': 404,
         'data': None
